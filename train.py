@@ -39,7 +39,7 @@ dataloaders = {
     'validation': DataLoader(image_datasets['validation'], batch_size=32, shuffle=False),
 }
 
-# Get the class names
+# Get the class names (Arial, Courier New, Tahoma, Amiri, Andalus)
 class_names = image_datasets['train'].classes
 
 # Function to check for common data between training and validation sets
@@ -61,8 +61,8 @@ check_common_data(image_datasets['train'], image_datasets['validation'])
 
 # Load MobileNetV2 pretrained model
 model = models.mobilenet_v2(pretrained=True)
-# Modify the classifier to fit our two-class problem
-model.classifier[1] = nn.Linear(model.last_channel, 2)
+# Modify the classifier to fit our five-class problem
+model.classifier[1] = nn.Linear(model.last_channel, 5)  # Change the output layer to 5 classes
 model = model.to(device)
 
 # Loss function and optimizer
