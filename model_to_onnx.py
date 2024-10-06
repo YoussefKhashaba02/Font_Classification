@@ -5,7 +5,7 @@ import onnxruntime as ort
 
 def export_to_onnx(model_path, onnx_model_path):
     model = models.mobilenet_v2()
-    model.classifier[1] = torch.nn.Linear(model.last_channel, 2) #Adjust for Number of classes
+    model.classifier[1] = torch.nn.Linear(model.last_channel, 5) #Adjust for Number of classes
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
 
     model.eval()
