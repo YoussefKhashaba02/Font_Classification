@@ -2,13 +2,14 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import gradio as gr
-from torchvision.models import mobilenet_v2
+from torchvision.models import resnet18
 import numpy as np
 import cv2
 
-# Load the MobileNet model
-model_path = 'mobilenet_font_classification4.pth'  # Replace with your actual model file path
-model = mobilenet_v2(num_classes=5)  # Adjust num_classes based on your use case
+# Load the ResNet18 model
+model_path = 'resnet18_font_classification_new.pth'  # Replace with your actual model file path
+model = resnet18(pretrained=False)  # Initialize ResNet18 without pretrained weights
+model.fc = torch.nn.Linear(model.fc.in_features, 5)  # Modify the last layer to match the number of classes
 model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
 model.eval()  # Set the model to evaluation mode
 
@@ -54,7 +55,7 @@ def generate_gradcam(image, class_index):
     model.eval()
     
     # Register hooks to capture gradients and activations
-    final_conv_layer = model.features[-1]  # Use the last convolutional layer of the model
+    final_conv_layer = model.layer4[-1]  # Use the last convolutional layer of ResNet18
     final_conv_layer.register_full_backward_hook(lambda m, grad_input, grad_output: save_gradients(grad_output[0]))
     final_conv_layer.register_forward_hook(lambda m, input, output: save_activations(output))
 
@@ -67,7 +68,7 @@ def generate_gradcam(image, class_index):
     class_loss.backward()
     
     # Compute the weights
-    weights = torch.mean(gradients, dim=(0))  # Global average pooling
+    weights = torch.mean(gradients, dim=(0, 2, 3))  # Global average pooling
     cam = torch.zeros(activations.shape[2:], dtype=torch.float32)
 
     # Create the heatmap
@@ -80,7 +81,6 @@ def generate_gradcam(image, class_index):
     cam /= torch.max(cam)
 
     return cam.detach().numpy()  # Detach the tensor before converting to NumPy
-
 
 # Define prediction function using PyTorch
 def classify_font(image):
